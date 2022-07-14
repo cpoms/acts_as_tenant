@@ -6,7 +6,7 @@ module ActsAsTenant
       def acts_as_tenant(tenant = :account, **options)
         ActsAsTenant.set_tenant_klass(tenant)
 
-        ActsAsTenant.add_global_record_model(self) if options[:has_global_records]
+        ActsAsTenant.add_global_record_model(self, options[:has_global_records])
 
         # Create the association
         valid_options = options.slice(:foreign_key, :class_name, :inverse_of, :optional, :primary_key, :counter_cache)
@@ -27,7 +27,7 @@ module ActsAsTenant
 
           if ActsAsTenant.current_tenant
             keys = [ActsAsTenant.current_tenant.send(pkey)].compact
-            keys.push(nil) if options[:has_global_records]
+            keys.push(nil) if ActsAsTenant.has_global_records?(self.klass)
 
             if options[:through]
               query_criteria = {options[:through] => {fkey.to_sym => keys}}
@@ -131,7 +131,7 @@ module ActsAsTenant
         # validating within tenant scope
         validates_uniqueness_of(fields, validation_args)
 
-        if ActsAsTenant.models_with_global_records.include?(self)
+        if ActsAsTenant.has_global_records?(self)
           arg_if = args.delete(:if)
           arg_condition = args.delete(:conditions)
 
