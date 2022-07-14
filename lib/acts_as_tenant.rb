@@ -11,7 +11,7 @@ module ActsAsTenant
 
   @@configuration = nil
   @@tenant_klass = nil
-  @@models_with_global_records = []
+  @@models_with_global_records = {}
 
   class << self
     attr_writer :default_tenant
@@ -39,8 +39,14 @@ module ActsAsTenant
     @@models_with_global_records
   end
 
-  def self.add_global_record_model model
-    @@models_with_global_records.push(model)
+  def self.add_global_record_model model, value
+    @@models_with_global_records[model.name] = value
+  end
+
+  def self.has_global_records? model
+    value = @@models_with_global_records[model.name]
+
+    value.is_a?(Proc) ? value.call : value
   end
 
   def self.fkey
