@@ -20,39 +20,43 @@ module ActsAsTenant
           belongs_to tenant, **valid_options
         end
 
-        default_scope lambda {
-          if ActsAsTenant.should_require_tenant? && ActsAsTenant.current_tenant.nil? && !ActsAsTenant.unscoped?
-            raise ActsAsTenant::Errors::NoTenantSet
-          end
-
-          if ActsAsTenant.current_tenant
-            keys = [ActsAsTenant.current_tenant.send(pkey)].compact
-            keys.push(nil) if ActsAsTenant.has_global_records?(self.klass)
-
-            if options[:through]
-              query_criteria = {options[:through] => {fkey.to_sym => keys}}
-              query_criteria[polymorphic_type.to_sym] = ActsAsTenant.current_tenant.class.to_s if options[:polymorphic]
-              joins(options[:through])
-                .where(query_criteria)
-                .ids
-                .then do |ids|
-                  if options[:unscoped]
-                    where(id: ids).or(where(options[:unscoped]))
-                  else
-                    where(id: ids)
-                  end
-                end
-            else
-              query_criteria = {fkey.to_sym => keys}
-              query_criteria[polymorphic_type.to_sym] = ActsAsTenant.current_tenant.class.to_s if options[:polymorphic]
-              where(query_criteria).then do |q|
-                options[:unscoped] ? q.or(where(options[:unscoped])) : q
-              end
+        unless ActsAsTenant.already_scoped? self
+          default_scope lambda {
+            if ActsAsTenant.should_require_tenant? && ActsAsTenant.current_tenant.nil? && !ActsAsTenant.unscoped?
+              raise ActsAsTenant::Errors::NoTenantSet
             end
-          else
-            all
-          end
-        }
+
+            if ActsAsTenant.current_tenant
+              keys = [ActsAsTenant.current_tenant.send(pkey)].compact
+              keys.push(nil) if ActsAsTenant.has_global_records?(klass)
+
+              if options[:through]
+                query_criteria = {options[:through] => {fkey.to_sym => keys}}
+                query_criteria[polymorphic_type.to_sym] = ActsAsTenant.current_tenant.class.to_s if options[:polymorphic]
+                joins(options[:through])
+                  .where(query_criteria)
+                  .ids
+                  .then do |ids|
+                    if options[:unscoped]
+                      where(id: ids).or(where(options[:unscoped]))
+                    else
+                      where(id: ids)
+                    end
+                  end
+              else
+                query_criteria = {fkey.to_sym => keys}
+                query_criteria[polymorphic_type.to_sym] = ActsAsTenant.current_tenant.class.to_s if options[:polymorphic]
+                where(query_criteria).then do |q|
+                  options[:unscoped] ? q.or(where(options[:unscoped])) : q
+                end
+              end
+            else
+              all
+            end
+          }
+
+          ActsAsTenant.add_already_scoped self
+        end
 
         # Add the following validations to the receiving model:
         # - new instances should have the tenant set

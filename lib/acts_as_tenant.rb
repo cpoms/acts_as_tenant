@@ -12,6 +12,7 @@ module ActsAsTenant
   @@configuration = nil
   @@tenant_klass = nil
   @@models_with_global_records = {}
+  @@already_scoped_models = {}
 
   class << self
     attr_writer :default_tenant
@@ -47,6 +48,24 @@ module ActsAsTenant
     value = @@models_with_global_records[model.name]
 
     value.is_a?(Proc) ? value.call : value
+  end
+
+  def self.already_scoped_models
+    @@already_scoped_models
+  end
+
+  def self.add_already_scoped model
+    @@already_scoped_models[model.name] = true
+  end
+
+  def self.already_scoped? model
+    klass = model
+
+    while klass != ActiveRecord::Base # don't need to check further up
+      return true if @@already_scoped_models[klass.name]
+
+      klass = klass.superclass
+    end
   end
 
   def self.fkey
