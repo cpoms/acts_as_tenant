@@ -138,8 +138,8 @@ describe ActsAsTenant do
     end
 
     it "should add the model to ActsAsTenant.models_with_global_records" do
-      expect(ActsAsTenant.models_with_global_records.include?(GlobalProject)).to be_truthy
-      expect(ActsAsTenant.models_with_global_records.include?(Project)).to be_falsy
+      expect(ActsAsTenant.models_with_global_records[GlobalProject.name]).to_not be_nil
+      expect(ActsAsTenant.models_with_global_records[Project.name]).to be_nil
     end
 
     context "should validate tenant records against global & tenant records" do
