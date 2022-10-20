@@ -340,10 +340,11 @@ Contributing to this gem
 We use the Appraisal gem to run tests against supported versions of Rails to test for compatibility against them all. StandardRb also helps keep code formatted cleanly.
 
 1. Fork the repo
-2. Make changes
-3. Run test suite with `bundle exec appraisal`
-4. Run `bundle exec standardrb` to standardize code formatting
-5. Submit a PR
+1. Make changes.
+1. Install dependencies with `bundle exec appraisal`
+1. Run test suite with `bundle exec appraisal rake`
+1. Run `bundle exec standardrb` to standardize code formatting
+1. Submit a PR
 
 Author & Credits
 ----------------
