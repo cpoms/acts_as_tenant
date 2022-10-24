@@ -54,7 +54,6 @@ module ActsAsTenant
               all
             end
           }
-
           ActsAsTenant.add_already_scoped self
         end
 
@@ -78,7 +77,7 @@ module ActsAsTenant
         }.map { |a| a.foreign_key }
 
         reflect_on_all_associations(:belongs_to).each do |a|
-          unless a == reflect_on_association(tenant) || polymorphic_foreign_keys.include?(a.foreign_key) || !a.klass.try(:scoped_by_tenant?)
+          unless a == reflect_on_association(tenant) || polymorphic_foreign_keys.include?(a.foreign_key.to_s) || !(a.polymorphic? || a.klass.try(:scoped_by_tenant?))
             validates_each a.foreign_key.to_sym do |record, attr, value|
               primary_key = if a.respond_to?(:active_record_primary_key)
                 a.active_record_primary_key
